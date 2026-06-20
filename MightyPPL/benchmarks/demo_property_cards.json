@@ -1,0 +1,38 @@
+{
+  "schema_version": "bizonefuzz.propertycard.v1",
+  "artifact_role": "tooling-demo-only",
+  "cards": [
+    {
+      "property_id": "demo.req_rsp.deadline",
+      "protocol": "demo",
+      "source_url": "https://example.invalid/spec-demo",
+      "section_id": "demo-1",
+      "normative_level": "DEMO_ONLY",
+      "original_clause": "Whenever req appears, rsp must follow within 5 ms.",
+      "timer_symbol": "T_rsp",
+      "timer_binding": {
+        "kind": "constant",
+        "unit": "ms",
+        "value": 5
+      },
+      "AP_definition": {
+        "req": "request event observed",
+        "rsp": "response event observed"
+      },
+      "trace_mapping": {
+        "event_stream": "request+response timed trace",
+        "req": "TimedTraceEvent.request_class contains 'req'",
+        "rsp": "TimedTraceEvent.request_class contains 'rsp'"
+      },
+      "MITL_formula": "G(req -> F[0,5] rsp)",
+      "positive_trace": [
+        "@0 req",
+        "@4 rsp"
+      ],
+      "boundary_negative_trace": [
+        "@0 req",
+        "@6 rsp"
+      ]
+    }
+  ]
+}

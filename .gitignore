@@ -1,0 +1,10 @@
+.agents/
+.codex/
+.git.EMPTY_DIR_DO_NOT_USE_*/
+
+**/.git
+**/__pycache__/
+**/.pytest_cache/
+**/build/
+
+profuzzbench/results-*/

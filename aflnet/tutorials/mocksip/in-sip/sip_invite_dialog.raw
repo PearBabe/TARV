@@ -1,0 +1,20 @@
+REGISTER sip:127.0.0.1 SIP/2.0
+Via: SIP/2.0/UDP 127.0.0.1:5060;branch=z9hG4bK-1
+Max-Forwards: 70
+From: <sip:alice@127.0.0.1>;tag=1111
+To: <sip:alice@127.0.0.1>
+Call-ID: reg-1@127.0.0.1
+CSeq: 1 REGISTER
+Contact: <sip:alice@127.0.0.1:5060>
+Content-Length: 0
+
+INVITE sip:bob@127.0.0.1 SIP/2.0
+Via: SIP/2.0/UDP 127.0.0.1:5060;branch=z9hG4bK-2
+Max-Forwards: 70
+From: <sip:alice@127.0.0.1>;tag=1111
+To: <sip:bob@127.0.0.1>
+Call-ID: dlg-1@127.0.0.1
+CSeq: 2 INVITE
+Contact: <sip:alice@127.0.0.1:5060>
+Content-Length: 0
+

@@ -1,0 +1,105 @@
+{
+  "schema_version": "bizonefuzz.profuzzbench.catalog.v1",
+  "artifact_role": "campaign-catalog",
+  "stages": [
+    {
+      "stage_id": "bring-up",
+      "subjects": [
+        {
+          "subject_id": "lightftp",
+          "protocol": "FTP",
+          "profuzzbench_target": "lightftp",
+          "docker_image": "lightftp",
+          "recommended_property_id": "",
+          "monitor_policy": {
+            "mode": "baseline-only",
+            "allowed_variants": [
+              "aflnet-base",
+              "aflnwe",
+              "stateafl"
+            ],
+            "reason": "No defensible short-horizon official timed PropertyCard is currently available for LightFTP: RFC 1123 provides only a >=5 minute FTP idle-timeout lower bound, while the checked-in LightFTP target configuration/source at commit 5980ea1 does not expose a shorter implementation-default control timeout suitable for the current fuzz budgets."
+          },
+          "aflnet_options": "-P FTP -D 10000 -q 3 -s 3 -E -K -m none -t {TEST_TIMEOUT}",
+          "aflnwe_options": "-D 10000 -K -m none -t {TEST_TIMEOUT}",
+          "stateafl_options": "-P FTP -D 10000 -q 3 -s 3 -E -K -m none -u /home/ubuntu/experiments/LightFTP/Source/Release/fftp -t {TEST_TIMEOUT}"
+        },
+        {
+          "subject_id": "exim",
+          "protocol": "SMTP",
+          "profuzzbench_target": "exim",
+          "docker_image": "exim",
+          "recommended_property_id": "smtp.mail.reply_within_minimum_timeout",
+          "aflnet_options": "-P SMTP -D 10000 -q 3 -s 3 -E -K -W 100 -m none -t {TEST_TIMEOUT}",
+          "aflnwe_options": "-D 10000 -K -W 100 -m none -t {TEST_TIMEOUT}",
+          "stateafl_options": "-P SMTP -D 10000 -q 3 -s 3 -E -K -W 100 -m none -u /home/ubuntu/experiments/exim/src/build-Linux-x86_64/exim -t {TEST_TIMEOUT}"
+        },
+        {
+          "subject_id": "live555",
+          "protocol": "RTSP",
+          "profuzzbench_target": "live555",
+          "docker_image": "live555",
+          "recommended_property_id": "rtsp.session_activity_before_default_timeout",
+          "aflnet_options": "-P RTSP -D 10000 -q 3 -s 3 -E -K -R -m none -t {TEST_TIMEOUT}",
+          "aflnwe_options": "-D 10000 -K -m none -t {TEST_TIMEOUT}",
+          "stateafl_options": "-P RTSP -D 10000 -q 3 -s 3 -E -K -R -m none -u /home/ubuntu/experiments/live555/testProgs/testOnDemandRTSPServer -t {TEST_TIMEOUT}"
+        }
+      ]
+    },
+    {
+      "stage_id": "main-study",
+      "subjects": [
+        {
+          "subject_id": "kamailio",
+          "protocol": "SIP",
+          "profuzzbench_target": "kamailio",
+          "docker_image": "kamailio",
+          "recommended_property_id": "sip.invite.response_within_timer_b",
+          "aflnet_options": "-m none -P SIP -l 5061 -D 50000 -q 3 -s 3 -E -K -t {TEST_TIMEOUT}",
+          "aflnwe_options": "-m none -D 50000 -K -t {TEST_TIMEOUT}",
+          "stateafl_options": "-m none -P SIP -l 5061 -D 50000 -q 3 -s 3 -E -K -u /home/ubuntu/experiments/kamailio/src/kamailio -U /home/ubuntu/experiments/kamailio/ -t {TEST_TIMEOUT}"
+        },
+        {
+          "subject_id": "tinydtls",
+          "protocol": "DTLS",
+          "profuzzbench_target": "tinydtls",
+          "docker_image": "tinydtls",
+          "recommended_property_id": "dtls.clienthello.no_retransmit_before_initial_rto",
+          "aflnet_options": "-P DTLS12 -D 10000 -q 3 -s 3 -E -K -W 30 -m none -t {TEST_TIMEOUT}",
+          "aflnwe_options": "-D 10000 -K -W 30 -m none -t {TEST_TIMEOUT}",
+          "stateafl_options": "-P DTLS12 -D 10000 -q 3 -s 3 -E -K -W 30 -m none -u /home/ubuntu/experiments/tinydtls/tests/dtls-server -t {TEST_TIMEOUT}"
+        },
+        {
+          "subject_id": "live555",
+          "protocol": "RTSP",
+          "profuzzbench_target": "live555",
+          "docker_image": "live555",
+          "recommended_property_id": "rtsp.session_activity_before_default_timeout",
+          "aflnet_options": "-P RTSP -D 10000 -q 3 -s 3 -E -K -R -m none -t {TEST_TIMEOUT}",
+          "aflnwe_options": "-D 10000 -K -m none -t {TEST_TIMEOUT}",
+          "stateafl_options": "-P RTSP -D 10000 -q 3 -s 3 -E -K -R -m none -u /home/ubuntu/experiments/live555/testProgs/testOnDemandRTSPServer -t {TEST_TIMEOUT}"
+        },
+        {
+          "subject_id": "dcmtk",
+          "protocol": "DICOM",
+          "profuzzbench_target": "dcmtk",
+          "docker_image": "dcmtk",
+          "recommended_property_id": "dicom.acse_response_within_default_timeout",
+          "aflnet_options": "-P DICOM -D 10000 -E -K -m none -t {TEST_TIMEOUT}",
+          "aflnwe_options": "-D 10000 -K -m none -t {TEST_TIMEOUT}",
+          "stateafl_options": "-P DICOM -D 10000 -E -K -m none -u /home/ubuntu/experiments/dcmtk/build/bin/dcmqrscp -t {TEST_TIMEOUT}"
+        },
+        {
+          "subject_id": "openssh",
+          "protocol": "SSH",
+          "profuzzbench_target": "openssh",
+          "docker_image": "openssh",
+          "recommended_property_id": "ssh.login_grace_disconnect_or_auth",
+          "aflnet_options": "-P SSH -D 10000 -q 3 -s 3 -E -K -W 10 -m none -t {TEST_TIMEOUT}",
+          "aflnwe_options": "-D 10000 -K -W 10 -m none -t {TEST_TIMEOUT}",
+          "stateafl_options": "-P SSH -D 10000 -q 3 -s 3 -E -K -W 10 -l 30000 -e 20000 -m none -u /home/ubuntu/experiments/openssh/sshd -t {TEST_TIMEOUT}"
+        }
+      ]
+    }
+  ]
+}

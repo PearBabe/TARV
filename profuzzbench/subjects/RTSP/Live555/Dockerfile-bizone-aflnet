@@ -1,0 +1,18 @@
+FROM live555
+
+ARG MAKE_OPT
+
+ENV BIZONE_AFLNET="/home/ubuntu/bizone-aflnet"
+ENV AFL_PATH="${BIZONE_AFLNET}"
+ENV PATH="${BIZONE_AFLNET}:${PATH}"
+
+USER root
+COPY --chown=ubuntu:ubuntu bizone-aflnet-src ${BIZONE_AFLNET}
+RUN cd ${BIZONE_AFLNET} && \
+    make clean >/dev/null 2>&1 || true && \
+    make all ${MAKE_OPT}
+
+COPY --chown=ubuntu:ubuntu run-bizone-aflnet.sh ${WORKDIR}/run-bizone-aflnet
+RUN chmod +x ${WORKDIR}/run-bizone-aflnet
+
+USER ubuntu

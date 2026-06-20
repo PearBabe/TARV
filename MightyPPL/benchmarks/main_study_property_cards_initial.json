@@ -1,0 +1,615 @@
+{
+  "schema_version": "bizonefuzz.propertycard.v1",
+  "artifact_role": "initial-protocol-bundle",
+  "bundle_id": "bizonefuzz.protocol-bundle.initial.v2",
+  "bundle_scope": [
+    "SIP",
+    "DTLS",
+    "SSH",
+    "RTSP",
+    "DICOM",
+    "SMTP"
+  ],
+  "review_status": "draft-monitor-checked",
+  "review_metadata": {
+    "required_approvals": 2,
+    "bundle_approvals": [
+      {
+        "reviewer_id": "agent_primary",
+        "reviewer_name": "Codex",
+        "role": "bundle_curator",
+        "decision": "approve-draft",
+        "date": "2026-06-17",
+        "notes": "Initial official-source extraction, formula binding, and monitor validation completed; independent second reviewer still required."
+      }
+    ],
+    "dynamic_validation": {
+      "status": "passed",
+      "tool": "property_card_tools.py check-monitor",
+      "date": "2026-06-18",
+      "scope": "all cards in bundle"
+    },
+    "publication_blockers": [
+      "Second reviewer approval is still required for bundle-level paper publication."
+    ]
+  },
+  "cards": [
+    {
+      "property_id": "sip.invite.response_within_timer_b",
+      "protocol": "SIP",
+      "source_url": "https://datatracker.ietf.org/doc/html/rfc3261",
+      "section_id": "RFC3261 §17.1.1.1-§17.1.1.2",
+      "normative_level": "MUST + default binding",
+      "original_clause": "Timer B = 64*T1; T1 default = 500 ms.",
+      "timer_symbol": "T_timer_b",
+      "timer_binding": {
+        "kind": "derived_constant",
+        "unit": "ms",
+        "expression": "64 * T1",
+        "defaults": {
+          "T1_ms": 500
+        },
+        "resolved_ms": 32000
+      },
+      "AP_definition": {
+        "invite": "An INVITE client transaction starts on an unreliable transport.",
+        "invite_rsp": "A matching SIP response (provisional or final) is observed for that INVITE transaction."
+      },
+      "trace_mapping": {
+        "event_stream": "request+response timed trace",
+        "invite": "TimedTraceEvent mapped from the first outbound INVITE replay event for a transaction, labeled with invite plus a transaction helper such as sip_tx_<hash>.",
+        "invite_rsp": "TimedTraceEvent mapped from a SIP response replay event correlated to that same INVITE transaction, labeled with invite_rsp plus the matching sip_tx_<hash> helper."
+      },
+      "MITL_formula": "G(invite -> F[0,32000] invite_rsp)",
+      "positive_trace": [
+        "@0 invite",
+        "@31999 invite_rsp"
+      ],
+      "boundary_negative_trace": [
+        "@0 invite",
+        "@32001 invite_rsp"
+      ],
+      "extraction_notes": {
+        "template": "bounded response",
+        "spec_snapshot": "RFC 3261 datatracker HTML snapshot accessed 2026-06-17",
+        "review": "single-agent draft; second reviewer still required for paper artifact",
+        "runtime_binding": "AFLNet timed traces now export transaction-aware invite/invite_rsp labels for correlated SIP INVITE responses."
+      },
+      "review_metadata": {
+        "required_approvals": 2,
+        "approvals": [
+          {
+            "reviewer_id": "agent_primary",
+            "reviewer_name": "Codex",
+            "role": "extractor",
+            "decision": "approve-draft",
+            "date": "2026-06-17",
+            "notes": "Initial extraction and replay validation completed; second reviewer still required."
+          }
+        ],
+        "dynamic_validation": {
+          "status": "passed",
+          "tool": "property_card_tools.py check-monitor",
+          "date": "2026-06-17",
+          "scope": "positive and boundary-negative traces"
+        },
+        "publication_ready": false,
+        "blockers": [
+          "Second reviewer approval required before paper publication."
+        ]
+      }
+    },
+    {
+      "property_id": "sip.invite.no_retransmit_before_timer_a",
+      "protocol": "SIP",
+      "source_url": "https://datatracker.ietf.org/doc/html/rfc3261",
+      "section_id": "RFC3261 §17.1.1.2",
+      "normative_level": "MUST + default binding",
+      "original_clause": "If an unreliable transport is being used, the client transaction MUST start timer A with a value of T1. When timer A fires, the client transaction MUST retransmit the request. The default value for T1 is 500 ms.",
+      "timer_symbol": "T_timer_a0",
+      "timer_binding": {
+        "kind": "default_constant",
+        "unit": "ms",
+        "expression": "T1",
+        "defaults": {
+          "T1_ms": 500
+        },
+        "resolved_ms": 500
+      },
+      "AP_definition": {
+        "invite": "An initial INVITE client transaction request is observed on an unreliable transport.",
+        "rtx": "A retransmitted INVITE for the same client transaction is observed."
+      },
+      "trace_mapping": {
+        "event_stream": "request+response timed trace",
+        "invite": "TimedTraceEvent mapped from the first outbound INVITE replay event for a transaction, labeled with invite plus a transaction helper such as sip_tx_<hash>.",
+        "rtx": "TimedTraceEvent mapped from a later outbound INVITE replay event for that same transaction, labeled with rtx plus the matching sip_tx_<hash> helper."
+      },
+      "MITL_formula": "G(invite -> G[0,499] (!rtx))",
+      "positive_trace": [
+        "@0 invite",
+        "@500 rtx"
+      ],
+      "boundary_negative_trace": [
+        "@0 invite",
+        "@499 rtx"
+      ],
+      "extraction_notes": {
+        "template": "no-event-before-deadline",
+        "spec_snapshot": "RFC 3261 datatracker HTML snapshot accessed 2026-06-17",
+        "review": "single-agent draft; second reviewer still required for paper artifact",
+        "runtime_binding": "AFLNet timed traces now export transaction-aware invite/rtx labels keyed by the same sip_tx_<hash> helper for the INVITE transaction."
+      },
+      "review_metadata": {
+        "required_approvals": 2,
+        "approvals": [
+          {
+            "reviewer_id": "agent_primary",
+            "reviewer_name": "Codex",
+            "role": "extractor",
+            "decision": "approve-draft",
+            "date": "2026-06-17",
+            "notes": "Initial extraction and replay validation completed; second reviewer still required."
+          }
+        ],
+        "dynamic_validation": {
+          "status": "passed",
+          "tool": "property_card_tools.py check-monitor",
+          "date": "2026-06-17",
+          "scope": "positive and boundary-negative traces"
+        },
+        "publication_ready": false,
+        "blockers": [
+          "Second reviewer approval required before paper publication."
+        ]
+      }
+    },
+    {
+      "property_id": "sip.invite.no_second_retransmit_before_doubled_timer_a",
+      "protocol": "SIP",
+      "source_url": "https://datatracker.ietf.org/doc/html/rfc3261",
+      "section_id": "RFC3261 §17.1.1.2",
+      "normative_level": "MUST",
+      "original_clause": "For unreliable INVITE transactions, timer A starts at T1 and doubles after each retransmission.",
+      "timer_symbol": "T_timer_a1",
+      "timer_binding": {
+        "kind": "derived_constant",
+        "unit": "ms",
+        "expression": "2 * T1",
+        "defaults": {
+          "T1_ms": 500
+        },
+        "resolved_ms": 1000,
+        "backoff": "x2"
+      },
+      "AP_definition": {
+        "rtx1": "The first retransmitted INVITE for a client transaction is observed on an unreliable transport.",
+        "rtx2": "The second retransmitted INVITE for the same client transaction is observed."
+      },
+      "trace_mapping": {
+        "event_stream": "request+response timed trace",
+        "rtx1": "TimedTraceEvent mapped from the first outbound INVITE replay event after the initial invite, labeled with both rtx and rtx1 plus the transaction-local sip_tx_<hash> helper.",
+        "rtx2": "TimedTraceEvent mapped from the second outbound INVITE replay event after the initial invite, labeled with both rtx and rtx2 plus the same sip_tx_<hash> helper."
+      },
+      "MITL_formula": "G(rtx1 -> G[0,999] (!rtx2))",
+      "positive_trace": [
+        "@0 rtx1",
+        "@1000 rtx2"
+      ],
+      "boundary_negative_trace": [
+        "@0 rtx1",
+        "@999 rtx2"
+      ],
+      "extraction_notes": {
+        "template": "no-event-before-deadline",
+        "spec_snapshot": "RFC 3261 datatracker HTML snapshot accessed 2026-06-18",
+        "review": "single-agent draft; second reviewer still required for paper artifact",
+        "runtime_binding": "AFLNet timed traces now export replay-aligned SIP ordinal retransmission labels such as rtx1/rtx2 alongside the generic rtx label when later INVITE retries are materialized."
+      },
+      "review_metadata": {
+        "required_approvals": 2,
+        "approvals": [
+          {
+            "reviewer_id": "agent_primary",
+            "reviewer_name": "Codex",
+            "role": "extractor",
+            "decision": "approve-draft",
+            "date": "2026-06-18",
+            "notes": "Initial extraction and replay validation completed; second reviewer still required."
+          }
+        ],
+        "dynamic_validation": {
+          "status": "passed",
+          "tool": "property_card_tools.py check-monitor",
+          "date": "2026-06-18",
+          "scope": "positive and boundary-negative traces"
+        },
+        "publication_ready": false,
+        "blockers": [
+          "Second reviewer approval required before paper publication."
+        ]
+      }
+    },
+    {
+      "property_id": "dtls.clienthello.no_retransmit_before_initial_rto",
+      "protocol": "DTLS",
+      "source_url": "https://datatracker.ietf.org/doc/html/rfc6347",
+      "section_id": "RFC6347 §4.2.4.1",
+      "normative_level": "SHOULD",
+      "original_clause": "Initial timer = 1 second; double at each retransmission; cap >= 60 seconds.",
+      "timer_symbol": "T_rtx0",
+      "timer_binding": {
+        "kind": "recommended_constant",
+        "unit": "ms",
+        "initial_ms": 1000,
+        "backoff": "x2",
+        "cap_ms_lower_bound": 60000
+      },
+      "AP_definition": {
+        "ch": "A DTLS ClientHello flight is transmitted.",
+        "rtx": "A retransmission of the same ClientHello flight is transmitted."
+      },
+      "trace_mapping": {
+        "event_stream": "request+response timed trace",
+        "ch": "TimedTraceEvent mapped from the first ClientHello flight, labeled with ch on the first outbound clienthello replay event.",
+        "rtx": "TimedTraceEvent mapped from a later outbound ClientHello replay event, labeled with rtx after the first observed clienthello flight."
+      },
+      "MITL_formula": "G(ch -> G[0,999] (!rtx))",
+      "positive_trace": [
+        "@0 ch",
+        "@1000 rtx"
+      ],
+      "boundary_negative_trace": [
+        "@0 ch",
+        "@999 rtx"
+      ],
+      "extraction_notes": {
+        "template": "no-event-before-deadline",
+        "spec_snapshot": "RFC 6347 datatracker HTML snapshot accessed 2026-06-17",
+        "review": "single-agent draft; second reviewer still required for paper artifact",
+        "runtime_binding": "AFLNet timed traces now export replay-aligned ch/rtx labels for ClientHello retransmission timing."
+      },
+      "review_metadata": {
+        "required_approvals": 2,
+        "approvals": [
+          {
+            "reviewer_id": "agent_primary",
+            "reviewer_name": "Codex",
+            "role": "extractor",
+            "decision": "approve-draft",
+            "date": "2026-06-17",
+            "notes": "Initial extraction and replay validation completed; second reviewer still required."
+          }
+        ],
+        "dynamic_validation": {
+          "status": "passed",
+          "tool": "property_card_tools.py check-monitor",
+          "date": "2026-06-17",
+          "scope": "positive and boundary-negative traces"
+        },
+        "publication_ready": false,
+        "blockers": [
+          "Second reviewer approval required before paper publication."
+        ]
+      }
+    },
+    {
+      "property_id": "dtls.clienthello.no_second_retransmit_before_doubled_rto",
+      "protocol": "DTLS",
+      "source_url": "https://datatracker.ietf.org/doc/html/rfc6347",
+      "section_id": "RFC6347 §4.2.4.1",
+      "normative_level": "SHOULD",
+      "original_clause": "Initial timer = 1 second; double at each retransmission; cap >= 60 seconds.",
+      "timer_symbol": "T_rtx1",
+      "timer_binding": {
+        "kind": "recommended_derived_constant",
+        "unit": "ms",
+        "expression": "2 * T_rtx0",
+        "defaults": {
+          "T_rtx0_ms": 1000
+        },
+        "resolved_ms": 2000,
+        "backoff": "x2",
+        "cap_ms_lower_bound": 60000
+      },
+      "AP_definition": {
+        "rtx1": "The first retransmission of a DTLS ClientHello flight is transmitted.",
+        "rtx2": "The second retransmission of the same DTLS ClientHello flight is transmitted."
+      },
+      "trace_mapping": {
+        "event_stream": "request+response timed trace",
+        "rtx1": "TimedTraceEvent mapped from the first outbound ClientHello replay event after the initial ch, labeled with both rtx and rtx1.",
+        "rtx2": "TimedTraceEvent mapped from the second outbound ClientHello replay event after the initial ch, labeled with both rtx and rtx2."
+      },
+      "MITL_formula": "G(rtx1 -> G[0,1999] (!rtx2))",
+      "positive_trace": [
+        "@0 rtx1",
+        "@2000 rtx2"
+      ],
+      "boundary_negative_trace": [
+        "@0 rtx1",
+        "@1999 rtx2"
+      ],
+      "extraction_notes": {
+        "template": "no-event-before-deadline",
+        "spec_snapshot": "RFC 6347 datatracker HTML snapshot accessed 2026-06-17",
+        "review": "single-agent draft; second reviewer still required for paper artifact",
+        "runtime_binding": "AFLNet timed traces now export replay-aligned DTLS ordinal retransmission labels such as rtx1/rtx2 alongside the generic rtx label when later ClientHello retries are materialized."
+      },
+      "review_metadata": {
+        "required_approvals": 2,
+        "approvals": [
+          {
+            "reviewer_id": "agent_primary",
+            "reviewer_name": "Codex",
+            "role": "extractor",
+            "decision": "approve-draft",
+            "date": "2026-06-17",
+            "notes": "Initial extraction and replay validation completed; second reviewer still required."
+          }
+        ],
+        "dynamic_validation": {
+          "status": "passed",
+          "tool": "property_card_tools.py check-monitor",
+          "date": "2026-06-17",
+          "scope": "positive and boundary-negative traces"
+        },
+        "publication_ready": false,
+        "blockers": [
+          "Second reviewer approval required before paper publication."
+        ]
+      }
+    },
+    {
+      "property_id": "ssh.login_grace_disconnect_or_auth",
+      "protocol": "SSH",
+      "source_url": "https://man.openbsd.org/sshd_config",
+      "section_id": "sshd_config LoginGraceTime",
+      "normative_level": "official default implementation behavior",
+      "original_clause": "Disconnect if login is not successful; default = 120 seconds.",
+      "timer_symbol": "T_login_grace",
+      "timer_binding": {
+        "kind": "constant",
+        "unit": "ms",
+        "value": 120000,
+        "source": "OpenSSH default LoginGraceTime"
+      },
+      "AP_definition": {
+        "conn_open": "A new unauthenticated SSH connection is established.",
+        "auth_done": "The session either authenticates successfully or disconnects due to grace-period expiry."
+      },
+      "trace_mapping": {
+        "event_stream": "request+response timed trace",
+        "conn_open": "TimedTraceEvent mapped from the first outbound SSH identification replay event, labeled with conn_open at the start of the transport/auth session.",
+        "auth_done": "TimedTraceEvent mapped from a correlated SSH response event labeled with auth_done when the replayed response sequence contains userauth_success or disconnect before/at grace expiry."
+      },
+      "MITL_formula": "G(conn_open -> F[0,120000] auth_done)",
+      "positive_trace": [
+        "@0 conn_open",
+        "@120000 auth_done"
+      ],
+      "boundary_negative_trace": [
+        "@0 conn_open",
+        "@120001 auth_done"
+      ],
+      "extraction_notes": {
+        "template": "idle-expiry",
+        "spec_snapshot": "OpenBSD sshd_config manual page snapshot accessed 2026-06-17",
+        "review": "single-agent draft; second reviewer still required for paper artifact",
+        "runtime_binding": "AFLNet timed traces now export replay-aligned conn_open/auth_done labels for SSH login-grace timing, using the first outbound identification event and correlated userauth_success or disconnect response events."
+      },
+      "review_metadata": {
+        "required_approvals": 2,
+        "approvals": [
+          {
+            "reviewer_id": "agent_primary",
+            "reviewer_name": "Codex",
+            "role": "extractor",
+            "decision": "approve-draft",
+            "date": "2026-06-17",
+            "notes": "Initial extraction and replay validation completed; second reviewer still required."
+          }
+        ],
+        "dynamic_validation": {
+          "status": "passed",
+          "tool": "property_card_tools.py check-monitor",
+          "date": "2026-06-17",
+          "scope": "positive and boundary-negative traces"
+        },
+        "publication_ready": false,
+        "blockers": [
+          "Second reviewer approval required before paper publication."
+        ]
+      }
+    },
+    {
+      "property_id": "rtsp.session_activity_before_default_timeout",
+      "protocol": "RTSP",
+      "source_url": "https://datatracker.ietf.org/doc/html/rfc2326",
+      "section_id": "RFC2326 §12.37 + Appendix A",
+      "normative_level": "default timeout semantics",
+      "original_clause": "The Session timeout parameter defaults to 60 seconds; the server may tear down the RTSP session after no client liveness information for the default one-minute interval.",
+      "timer_symbol": "T_rtsp_session",
+      "timer_binding": {
+        "kind": "default_constant",
+        "unit": "ms",
+        "value": 60000,
+        "source": "RTSP Session header default timeout"
+      },
+      "AP_definition": {
+        "session_open": "An RTSP session is established by a successful SETUP response carrying a Session identifier.",
+        "session_activity": "A subsequent RTSP request or other liveness indication for the same session is observed before the server times the session out."
+      },
+      "trace_mapping": {
+        "event_stream": "request+response timed trace",
+        "session_open": "TimedTraceEvent mapped from a successful RTSP SETUP response carrying a Session identifier, labeled with session_open plus a helper such as rtsp_sess_<hash>.",
+        "session_activity": "TimedTraceEvent mapped from a later session-scoped RTSP request whose Session header matches that same helper token, labeled with session_activity plus the matching rtsp_sess_<hash>."
+      },
+      "MITL_formula": "G(session_open -> F[0,60000] session_activity)",
+      "positive_trace": [
+        "@0 session_open",
+        "@60000 session_activity"
+      ],
+      "boundary_negative_trace": [
+        "@0 session_open",
+        "@60001 session_activity"
+      ],
+      "extraction_notes": {
+        "template": "session-order-with-timeout",
+        "spec_snapshot": "RFC 2326 datatracker HTML snapshot accessed 2026-06-17",
+        "target_alignment": "Matches the Live555 RTSP fuzz target's session/liveness behavior discussed in AFLNet materials",
+        "review": "single-agent draft; second reviewer still required for paper artifact",
+        "runtime_binding": "AFLNet timed traces now export replay-aligned session_open/session_activity labels keyed by the same rtsp_sess_<hash> helper derived from the Session identifier."
+      },
+      "review_metadata": {
+        "required_approvals": 2,
+        "approvals": [
+          {
+            "reviewer_id": "agent_primary",
+            "reviewer_name": "Codex",
+            "role": "extractor",
+            "decision": "approve-draft",
+            "date": "2026-06-17",
+            "notes": "Initial extraction and replay validation completed; second reviewer still required."
+          }
+        ],
+        "dynamic_validation": {
+          "status": "passed",
+          "tool": "property_card_tools.py check-monitor",
+          "date": "2026-06-17",
+          "scope": "positive and boundary-negative traces"
+        },
+        "publication_ready": false,
+        "blockers": [
+          "Second reviewer approval required before paper publication."
+        ]
+      }
+    },
+    {
+      "property_id": "dicom.acse_response_within_default_timeout",
+      "protocol": "DICOM",
+      "source_url": "https://support.dcmtk.org/docs/dcmqrscp.html",
+      "section_id": "dcmqrscp other network options",
+      "normative_level": "official default implementation option",
+      "original_clause": "dcmqrscp uses an ACSE message timeout of 30 seconds by default.",
+      "timer_symbol": "T_acse",
+      "timer_binding": {
+        "kind": "constant",
+        "unit": "ms",
+        "value": 30000,
+        "source": "dcmqrscp --acse-timeout default"
+      },
+      "AP_definition": {
+        "assoc_req": "A DICOM association / ACSE handshake is initiated toward dcmqrscp.",
+        "acse_rsp": "The matching ACSE response message for that association is observed."
+      },
+      "trace_mapping": {
+        "event_stream": "request+response timed trace",
+        "assoc_req": "TimedTraceEvent mapped from an outgoing DICOM association request sequence, labeled with assoc_req on the A-ASSOCIATE-RQ replay event.",
+        "acse_rsp": "TimedTraceEvent mapped from the corresponding ACSE response sequence, labeled with acse_rsp on the correlated A-ASSOCIATE-AC or A-ASSOCIATE-RJ response event."
+      },
+      "MITL_formula": "G(assoc_req -> F[0,30000] acse_rsp)",
+      "positive_trace": [
+        "@0 assoc_req",
+        "@30000 acse_rsp"
+      ],
+      "boundary_negative_trace": [
+        "@0 assoc_req",
+        "@30001 acse_rsp"
+      ],
+      "extraction_notes": {
+        "template": "bounded response",
+        "spec_snapshot": "DCMTK dcmqrscp documentation snapshot accessed 2026-06-17",
+        "target_alignment": "Matches the AFLNet dcmqrscp tutorial, which launches dcmqrscp without overriding default timeout options",
+        "review": "single-agent draft; second reviewer still required for paper artifact",
+        "runtime_binding": "AFLNet timed traces now export replay-aligned assoc_req/acse_rsp labels for DICOM ACSE association timing."
+      },
+      "review_metadata": {
+        "required_approvals": 2,
+        "approvals": [
+          {
+            "reviewer_id": "agent_primary",
+            "reviewer_name": "Codex",
+            "role": "extractor",
+            "decision": "approve-draft",
+            "date": "2026-06-17",
+            "notes": "Initial extraction and replay validation completed; second reviewer still required."
+          }
+        ],
+        "dynamic_validation": {
+          "status": "passed",
+          "tool": "property_card_tools.py check-monitor",
+          "date": "2026-06-17",
+          "scope": "positive and boundary-negative traces"
+        },
+        "publication_ready": false,
+        "blockers": [
+          "Second reviewer approval required before paper publication."
+        ]
+      }
+    },
+    {
+      "property_id": "smtp.mail.reply_within_minimum_timeout",
+      "protocol": "SMTP",
+      "source_url": "https://datatracker.ietf.org/doc/html/rfc5321",
+      "section_id": "RFC5321 §4.5.3.2.3",
+      "normative_level": "SHOULD",
+      "original_clause": "MAIL Command: 5 Minutes.",
+      "timer_symbol": "T_mail_reply",
+      "timer_binding": {
+        "kind": "minimum_constant",
+        "unit": "ms",
+        "value": 300000,
+        "source": "RFC 5321 MAIL command timeout minimum"
+      },
+      "AP_definition": {
+        "mail": "An outbound SMTP MAIL command is observed.",
+        "mail_rsp": "The correlated terminal SMTP reply for that MAIL command is observed."
+      },
+      "trace_mapping": {
+        "event_stream": "request+response timed trace",
+        "mail": "TimedTraceEvent mapped from an outbound SMTP request line whose parsed request class is mail.",
+        "mail_rsp": "TimedTraceEvent mapped from the last response event emitted for that same SMTP MAIL request, labeled with mail_rsp and optionally a raw reply-code helper such as rsp_250 or rsp_550."
+      },
+      "MITL_formula": "G(mail -> F[0,300000] mail_rsp)",
+      "positive_trace": [
+        "@0 mail",
+        "@300000 mail_rsp"
+      ],
+      "boundary_negative_trace": [
+        "@0 mail",
+        "@300001 mail_rsp"
+      ],
+      "extraction_notes": {
+        "template": "bounded response",
+        "spec_snapshot": "RFC 5321 datatracker HTML snapshot accessed 2026-06-18",
+        "target_alignment": "Matches the ProFuzzBench Exim SMTP subject, whose replay corpus includes MAIL FROM requests and whose server-side default command handling is exercised without overriding RFC-level timeout minima.",
+        "review": "single-agent draft; second reviewer still required for paper artifact",
+        "runtime_binding": "AFLNet timed traces now preserve raw SMTP reply-code labels and a correlated mail_rsp helper on the terminal response event for a MAIL command."
+      },
+      "review_metadata": {
+        "required_approvals": 2,
+        "approvals": [
+          {
+            "reviewer_id": "agent_primary",
+            "reviewer_name": "Codex",
+            "role": "extractor",
+            "decision": "approve-draft",
+            "date": "2026-06-18",
+            "notes": "Initial extraction and monitor-oriented trace binding completed; second reviewer still required."
+          }
+        ],
+        "dynamic_validation": {
+          "status": "passed",
+          "tool": "property_card_tools.py check-monitor",
+          "date": "2026-06-18",
+          "scope": "positive and boundary-negative traces"
+        },
+        "publication_ready": false,
+        "blockers": [
+          "Second reviewer approval required before paper publication."
+        ]
+      }
+    }
+  ]
+}

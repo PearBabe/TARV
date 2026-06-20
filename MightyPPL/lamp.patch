@@ -1,0 +1,132 @@
+--- MightyPPL_new_original.cpp	2026-04-12 13:07:10.660024220 +0100
++++ MightyPPL_new_lamp.cpp	2026-04-12 21:53:07.115623925 +0100
+@@ -2,7 +2,7 @@
+ 
+ namespace mightypplcpp {
+ 
+-    int gcd = 0;
++    int gcd = 1;
+     bool last_intersection = false;
+ 
+     size_t num_all_props;
+@@ -1602,6 +1602,9 @@
+                 out_str << "event:a" << std::endl << std::endl << std::endl;
+ 
+                 out_str << "clock:1:g" << std::endl;
++        		out_str << "clock:1:x" << std::endl;        // for timed lamp
++         		out_str << "clock:1:y" << std::endl;
++
+ 
+                 for (auto it = temporal_atoms.begin(); it != temporal_atoms.end(); ++it) {
+ 
+@@ -2435,15 +2438,55 @@
+         name = "M";
+ 
+         clocks.insert({0, "x0"});        // clock 0 is needed anyway
++        clocks.insert({1, "x"});
++        clocks.insert({2, "y"});
+ 
+         locations.push_back(monitaal::location_t(true, 0, "s0", empty_invariant));
++        locations.push_back(monitaal::location_t(false, 1, "s1", empty_invariant));
+ 
+-        // 0 -> 0, true
++        label = !bdd_ithvar(nnf_formula->props.at("push")) & !bdd_ithvar(nnf_formula->props.at("blink"));
++        reset.push_back(1);
++        guard.push_back(monitaal::constraint_t::lower_non_strict(1, 1));
++        guard.push_back(monitaal::constraint_t::upper_non_strict(1, 1));
++        bdd_edges.push_back(monitaal::bdd_edge_t(0, 0, guard, reset, label));
++        guard.clear();
++        reset.clear();
+ 
+-        label = bdd_true();
++        label = bdd_ithvar(nnf_formula->props.at("push")) & bdd_ithvar(nnf_formula->props.at("blink"));
++        reset.push_back(1);
++        reset.push_back(2);
++        bdd_edges.push_back(monitaal::bdd_edge_t(0, 1, guard, reset, label));
++        guard.clear();
++        reset.clear();
+ 
+-        bdd_edges.push_back(monitaal::bdd_edge_t(0, 0, guard, reset, label));
++        label = !bdd_ithvar(nnf_formula->props.at("push")) & bdd_ithvar(nnf_formula->props.at("blink"));
++        reset.push_back(1);
++        guard.push_back(monitaal::constraint_t::lower_non_strict(1, 1));
++        guard.push_back(monitaal::constraint_t::upper_non_strict(1, 1));
++        guard.push_back(monitaal::constraint_t::upper_strict(2, 3));
++        bdd_edges.push_back(monitaal::bdd_edge_t(1, 1, guard, reset, label));
++        guard.clear();
++        reset.clear();
+ 
++        label = bdd_ithvar(nnf_formula->props.at("push")) & bdd_ithvar(nnf_formula->props.at("blink"));
++        reset.push_back(1);
++        reset.push_back(2);
++        bdd_edges.push_back(monitaal::bdd_edge_t(1, 1, guard, reset, label));
++        guard.clear();
++        reset.clear();
++
++
++        label = !bdd_ithvar(nnf_formula->props.at("push")) & bdd_ithvar(nnf_formula->props.at("blink"));
++        reset.push_back(1);
++        guard.push_back(monitaal::constraint_t::lower_non_strict(1, 1));
++        guard.push_back(monitaal::constraint_t::upper_non_strict(1, 1));
++        guard.push_back(monitaal::constraint_t::lower_non_strict(2, 3));
++        guard.push_back(monitaal::constraint_t::upper_non_strict(2, 3));
++        bdd_edges.push_back(monitaal::bdd_edge_t(1, 0, guard, reset, label));
++        guard.clear();
++        reset.clear();
++
++ 
+         model = monitaal::TAwithBDDEdges(name, clocks, locations, bdd_edges, 0);   // last arg: initial location id
+         clocks.clear();
+         locations.clear();
+@@ -2458,8 +2501,10 @@
+                 out_str << "process:" << "M" << std::endl;
+ 
+                 out_str << "location:" << "M" << ":ell_0{initial: : labels: accept_M}" << std::endl;
++                out_str << "location:" << "M" << ":ell_1{}" << std::endl;
++
+ 
+-                out_str << "edge:" << "M" << ":ell_0:ell_0:a{provided: g == 0 && turn == " << components_counter << " : do: turn = 0; ";
++                out_str << "edge:" << "M" << ":ell_0:ell_0:a{provided: g == 0 && turn == " << components_counter << " && p_" << std::to_string(nnf_formula->props.at("push")) << " % 2 == 0 && p_" << std::to_string(nnf_formula->props.at("blink")) << " % 2 == 0 && x == 1 : do: x = 0; turn = 0; ";
+                 for (auto i = 0; i < num_all_props; ++i) {
+                     if (props_to_keep.count(i + 1)) {
+                         out_str << "p_" << i + 1 << " = 2" << (i + 1 == *props_to_keep.rbegin() ? "" : "; ");
+@@ -2467,6 +2512,39 @@
+                 }
+                 out_str << "}" << std::endl;
+ 
++                out_str << "edge:" << "M" << ":ell_0:ell_1:a{provided: g == 0 && turn == " << components_counter << " && p_" << std::to_string(nnf_formula->props.at("push")) << " >= 1 && p_" << std::to_string(nnf_formula->props.at("blink")) << " >= 1 : do: x = 0; y = 0; turn = 0; ";
++                for (auto i = 0; i < num_all_props; ++i) {
++                    if (props_to_keep.count(i + 1)) {
++                        out_str << "p_" << i + 1 << " = 2" << (i + 1 == *props_to_keep.rbegin() ? "" : "; ");
++                    }
++                }
++                out_str << "}" << std::endl;
++
++                out_str << "edge:" << "M" << ":ell_1:ell_1:a{provided: g == 0 && turn == " << components_counter << "&& p_" << std::to_string(nnf_formula->props.at("push")) << " % 2 == 0 && p_" << std::to_string(nnf_formula->props.at("blink")) << " >= 1 && x == 1 && y < 3 : do: x = 0; turn = 0; ";
++                for (auto i = 0; i < num_all_props; ++i) {
++                    if (props_to_keep.count(i + 1)) {
++                        out_str << "p_" << i + 1 << " = 2" << (i + 1 == *props_to_keep.rbegin() ? "" : "; ");
++                    }
++                }
++                out_str << "}" << std::endl;
++
++                out_str << "edge:" << "M" << ":ell_1:ell_1:a{provided: g == 0 && turn == " << components_counter << "&& p_" << std::to_string(nnf_formula->props.at("push")) << " >= 1 && p_" << std::to_string(nnf_formula->props.at("blink")) << " >= 1 : do: x = 0; y = 0; turn = 0; ";
++                for (auto i = 0; i < num_all_props; ++i) {
++                    if (props_to_keep.count(i + 1)) {
++                        out_str << "p_" << i + 1 << " = 2" << (i + 1 == *props_to_keep.rbegin() ? "" : "; ");
++                    }
++                }
++                out_str << "}" << std::endl;
++
++                out_str << "edge:" << "M" << ":ell_1:ell_0:a{provided: g == 0 && turn == " << components_counter << "&& p_" << std::to_string(nnf_formula->props.at("push")) << " % 2 == 0 && p_" << std::to_string(nnf_formula->props.at("blink")) << " >= 1 && x == 1 && y == 3 : do: x = 0; turn = 0; ";
++                for (auto i = 0; i < num_all_props; ++i) {
++                    if (props_to_keep.count(i + 1)) {
++                        out_str << "p_" << i + 1 << " = 2" << (i + 1 == *props_to_keep.rbegin() ? "" : "; ");
++                    }
++                }
++                out_str << "}" << std::endl;
++
++
+             } else {
+ 
+                 out_str << "\t<template>" << std::endl;
